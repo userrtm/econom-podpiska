@@ -28,9 +28,6 @@ app.get("/api/sub/:key", async (req, res) => {
   const isBrowser = accept.includes("text/html") && !isApp;
 
   if (isBrowser) {
-    const username = decodeNameFromKey(key) || "UserrTM SERVERS User";
-    let usage = parseUserInfo(null);
-
     try {
       const infoReq = await fetch(target, {
         redirect: "follow",
@@ -40,11 +37,26 @@ app.get("/api/sub/:key", async (req, res) => {
         }
       });
 
-      usage = parseUserInfo(infoReq.headers.get("subscription-userinfo"));
-    } catch {}
+      const text = await infoReq.text();
 
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    return res.status(200).send(getHtml(username, subUrl, usage));
+      if (!infoReq.ok || !text || text.trim().length < 20) {
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        return res.status(404).send(getDeletedHtml());
+      }
+
+      const username = decodeNameFromKey(key) || "UserrTM SERVERS User";
+      const usage = parseUserInfo(infoReq.headers.get("subscription-userinfo"));
+
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+
+      return res.status(200).send(getHtml(username, subUrl, usage));
+    } catch {
+      return res.status(500).send("proxy error");
+    }
   }
 
   try {
@@ -60,9 +72,15 @@ app.get("/api/sub/:key", async (req, res) => {
 
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("profile-update-interval", "6");
     res.setHeader("profile-title", "UserrTM SERVERS");
+
+    if (!r.ok || !text || text.trim().length < 20) {
+      return res.status(404).send("subscription deleted or not found");
+    }
 
     const userInfo = r.headers.get("subscription-userinfo");
     if (userInfo) res.setHeader("subscription-userinfo", userInfo);
@@ -147,6 +165,71 @@ function escapeHtml(str) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function getDeletedHtml() {
+  return `<!DOCTYPE html>
+<html lang="tk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>UserrTM SERVERS</title>
+<style>
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:Arial,sans-serif;
+  color:white;
+  background:linear-gradient(145deg,#020617,#11164d);
+  padding:20px;
+}
+.card{
+  max-width:430px;
+  width:100%;
+  text-align:center;
+  background:rgba(15,23,42,.78);
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:28px;
+  padding:30px 22px;
+  box-shadow:0 25px 80px rgba(0,0,0,.55);
+}
+.logo{
+  width:86px;
+  height:86px;
+  border-radius:28px;
+  margin:0 auto 16px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(135deg,#2563eb,#a855f7,#ec4899);
+  font-size:36px;
+  font-weight:900;
+}
+h1{margin:0 0 12px;font-size:28px}
+p{color:#d6def5;line-height:1.5;font-size:17px}
+.badge{
+  display:inline-block;
+  margin-top:10px;
+  padding:10px 16px;
+  border-radius:999px;
+  background:rgba(239,68,68,.18);
+  color:#fecaca;
+  font-weight:900;
+}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">U</div>
+    <h1>UserrTM SERVERS</h1>
+    <p>Bu subscription link öçürildi ýa-da tapylmady.</p>
+    <p>Этот ключ удалён или больше не существует.</p>
+    <div class="badge">404 • Deleted</div>
+  </div>
+</body>
+</html>`;
 }
 
 function getHtml(username, subUrl, usage) {
