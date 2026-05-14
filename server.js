@@ -39,9 +39,16 @@ app.get("/api/sub/:key", async (req, res) => {
 
       const text = await infoReq.text();
 
-      if (!infoReq.ok || !text || text.trim().length < 20) {
+      if (
+        !infoReq.ok ||
+        !text ||
+        text.trim().length < 20 ||
+        !/(vless:\/\/|vmess:\/\/|ss:\/\/|trojan:\/\/)/i.test(text)
+      ) {
         res.setHeader("Content-Type", "text/html; charset=utf-8");
         res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        res.setHeader("Pragma", "no-cache");
+        res.setHeader("Expires", "0");
         return res.status(404).send(getDeletedHtml());
       }
 
@@ -78,14 +85,19 @@ app.get("/api/sub/:key", async (req, res) => {
     res.setHeader("profile-update-interval", "6");
     res.setHeader("profile-title", "UserrTM SERVERS");
 
-    if (!r.ok || !text || text.trim().length < 20) {
+    if (
+      !r.ok ||
+      !text ||
+      text.trim().length < 20 ||
+      !/(vless:\/\/|vmess:\/\/|ss:\/\/|trojan:\/\/)/i.test(text)
+    ) {
       return res.status(404).send("subscription deleted or not found");
     }
 
     const userInfo = r.headers.get("subscription-userinfo");
     if (userInfo) res.setHeader("subscription-userinfo", userInfo);
 
-    return res.status(r.status).send(text);
+    return res.status(200).send(text);
   } catch {
     return res.status(500).send("proxy error");
   }
@@ -183,7 +195,10 @@ body{
   justify-content:center;
   font-family:Arial,sans-serif;
   color:white;
-  background:linear-gradient(145deg,#020617,#11164d);
+  background:
+    radial-gradient(circle at 20% 0%,rgba(59,130,246,.35),transparent 30%),
+    radial-gradient(circle at 90% 20%,rgba(168,85,247,.35),transparent 30%),
+    linear-gradient(145deg,#020617,#07162f 45%,#11164d);
   padding:20px;
 }
 .card{
@@ -462,6 +477,7 @@ setLang(lang);
 }
 
 const port = process.env.PORT || 8080;
+
 app.listen(port, "0.0.0.0", () => {
   console.log("UserrTM SERVERS running on port " + port);
 });
