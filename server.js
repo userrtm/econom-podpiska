@@ -70,7 +70,7 @@ res.setHeader("profile-update-interval", "6");
 res.setHeader("profile-title", "UserrTM SERVERS");
 
 // Happ duyuru yazısı
-const announceText = "⚡ Täze serverler goşuldy • UserrTM SERVERS Active";
+const announceText = "⚠️ Ping (san)  görünmese-de VPN işleýär. Serweri saýlap Connect basyň.⚠️";
 const announceBase64 = Buffer.from(announceText, "utf8").toString("base64");
 res.setHeader("announce", "base64:" + announceBase64);
 
