@@ -63,6 +63,20 @@ app.get("/api/sub/:key", async (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("profile-update-interval", "6");
     res.setHeader("profile-title", "UserrTM SERVERS");
+res.setHeader("Content-Type", "text/plain; charset=utf-8");
+res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+res.setHeader("Access-Control-Allow-Origin", "*");
+res.setHeader("profile-update-interval", "6");
+res.setHeader("profile-title", "UserrTM SERVERS");
+
+// Happ duyuru yazısı
+const announceText = "⚡ Täze serverler goşuldy • UserrTM SERVERS Active";
+const announceBase64 = Buffer.from(announceText, "utf8").toString("base64");
+res.setHeader("announce", "base64:" + announceBase64);
+
+// Happ website ve support ikonları
+res.setHeader("profile-web-page-url", "https://www.userrtm.com");
+res.setHeader("support-url", "https://t.me/userrtm");
 
     const userInfo = r.headers.get("subscription-userinfo");
     if (userInfo) res.setHeader("subscription-userinfo", userInfo);
